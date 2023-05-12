@@ -10,6 +10,11 @@ app.get('/', (req, res) => {
 })
 
 
+// middleware
+app.use(cors())
+app.use(express.json())
+
+
 // ---------------------
 //   MONGODB CODE STARTS HERE
 
@@ -28,13 +33,36 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
+
+        // create db and set collection
+        const database = client.db("coffeeDB");
+        const coffeeCollection = database.collection("coffee");
+
+        // read coffee data
+        app.get('/coffee', async (req, res) => {
+            const cursor = coffeeCollection.find();
+            result = await cursor.toArray()
+            res.send(result)
+        })
+
+        // add coffee items
+        app.post('/coffee', async (req, res) => {
+            const coffee = req.body;
+            console.log(coffee);
+
+            // insert a document/coffee item
+            const result = await coffeeCollection.insertOne(coffee);
+            res.send(result)
+        })
+
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
-        await client.close();
+        // await client.close();
     }
 }
 run().catch(console.dir);
